@@ -15,7 +15,14 @@ lint:
   stage: lint
   tags: [argos, ncz-os]
   script:
-    - docker run --rm -v $CI_PROJECT_DIR:/src -w /src python:3.11-slim bash -c "pip install --quiet yamllint && yamllint --no-warnings . || true && grep -q '^BBFILE_COLLECTIONS' conf/layer.conf && grep -q '^LAYERSERIES_COMPAT' conf/layer.conf && grep -q '^BBFILE_PRIORITY' conf/layer.conf && find . -name '*.bb' -print0 | xargs -0 -I FF sh -c 'grep -qE \"^(LICENSE|inherit|require)\" \"FF\" || (echo \"MISSING LICENSE: FF\" && exit 1)'"
+    - |
+      docker run --rm -v "$CI_PROJECT_DIR:/src" -w /src python:3.11-slim bash -c '
+        pip install --quiet yamllint && yamllint --no-warnings . || true
+        grep -q "^BBFILE_COLLECTIONS" conf/layer.conf
+        grep -q "^LAYERSERIES_COMPAT" conf/layer.conf
+        grep -q "^BBFILE_PRIORITY" conf/layer.conf
+        find . -name "*.bb" -print0 | xargs -0 -I FF sh -c "grep -qE \"^(LICENSE|inherit|require)\" \"FF\" || { echo \"MISSING LICENSE in FF\"; exit 1; }"
+      '
 
 check-layer:
   stage: check-layer
